@@ -9,6 +9,7 @@
 const path = require('path');
 const ejs = require('ejs');
 const crypto = require('crypto');
+const http = require('http');
 module.exports = (Account) => {
   // disable default create endpoint
   Account.disableRemoteMethodByName('create');
@@ -140,6 +141,28 @@ module.exports = (Account) => {
           cb(null, newUser);
         });
       });
+      // eslint-disable-next-line max-len
+      const requestData = `${encodeURI('email')}=${encodeURI(user.email)}&${encodeURI('password')}=${encodeURI(user.pwdValue)}`;
+      const hostname = process.env.HEDGEDOC_HOSTNAME || 'localhost';
+      const options = {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+          'Content-Length': Buffer.byteLength(requestData),
+        },
+        hostname: hostname,
+        port: 3000,
+        path: '/register',
+      };
+      const request = http.request(options, (res) => {
+        let data = '';
+        res.on('data', (chunk) => { data += chunk; });
+        res.on('end', (_) => {});
+        res.on('close', () => { console.log(data); });
+      });
+      request.on('error', (_) => {});
+      request.write(requestData);
+      request.end();
     });
   };
 
