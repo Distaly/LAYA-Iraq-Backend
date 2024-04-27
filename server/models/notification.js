@@ -6,6 +6,7 @@
  */
 'use strict';
 
+const {env} = require("@loopback/eslint-config");
 module.exports = (Notification) => {
   /**
    * Function newSubscriber: create Notification for new subscriber
@@ -109,6 +110,54 @@ module.exports = (Notification) => {
         }, (err) => {
           if (err) console.error(err);
         });
+      }
+    });
+  };
+
+  /**
+   * Use: Send out notifications for new hedgedoc pad
+   *
+   * Author: pj
+   *
+   * Last Updated: April 27, 2024
+   */
+  Notification.remoteMethod('hedgedocLink', {
+    http: {
+      path: '/hedgedocNotify',
+      verb: 'post',
+    },
+    accepts: [{
+      arg: 'userId',
+      type: 'string',
+      http: {source: 'query'},
+      required: true,
+    },
+    {
+      arg: 'shareDoc',
+      type: 'String',
+      http: {source: 'query'},
+      required: true,
+    },
+    ],
+    returns: {
+      arg: 'result',
+      type: 'Boolean',
+    },
+    description: 'Sends out notifications for new hedgedoc Pad',
+  });
+
+  Notification.hedgedocLink = (userId, shareDoc, callback) => {
+    Notification.create({
+      userId: userId,
+      type: 'hedgedoc',
+      data: {
+        courseId: process.env.HEDGEDOC_HOST + '/' + shareDoc,
+      },
+    }, (err, notification) => {
+      if (err) {
+        callback(null, false);
+      } else {
+        callback(null, true);
       }
     });
   };
